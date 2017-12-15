@@ -9,16 +9,22 @@
 <GridPane fx:controller="com.anastasia.app.zong_suen.view.ZongSuenController"
           xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">
 
-    <Canvas fx:id="imageCanvas" GridPane.rowIndex="0"/>
+    <Canvas fx:id="originalImageCanvas" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <Canvas fx:id="gradientImageCanvas" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Canvas fx:id="thresholdImageCanvas" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <Canvas fx:id="zongSuenImageCanvas" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-    <HBox GridPane.rowIndex="1" spacing="20" alignment="CENTER_RIGHT">
+    <HBox GridPane.rowIndex="2" spacing="20" alignment="CENTER_RIGHT" GridPane.columnSpan="2">
 
-        <TextField fx:id="parametersTextField"/>
-        <Button fx:id="loadImageButton" text="Загрузить"/>
-        <Button fx:id="saveImageButton" text="Сохранить"/>
+        <Button fx:id="loadOriginalImageButton" text="Загрузить"/>
+
+        <TextField fx:id="gradientTextField"/>
         <Button fx:id="gradientButton" text="Градиентный метод"/>
+
+        <TextField fx:id="thresholdTextField"/>
         <Button fx:id="thresholdFilterButton" text="Пороговая фильтрация"/>
-        <Button fx:id="zongSuenAlgoButton" text="Зонга-Сунь"/>
+
+        <Button fx:id="zongSuenAlgoButton" text="Зонга-Суня"/>
 
     </HBox>
 

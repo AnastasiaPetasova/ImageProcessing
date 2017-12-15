@@ -6,7 +6,7 @@ import com.anastasia.app.zong_suen.algo.ThresholdFilterProcessor;
 import com.anastasia.app.zong_suen.algo.ZongSuenProcessor;
 import com.anastasia.app.zong_suen.exception.AnastasiaException;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -33,19 +33,28 @@ import java.util.ResourceBundle;
 public class ZongSuenController implements Initializable {
 
     @FXML
-    Canvas imageCanvas;
+    Canvas originalImageCanvas;
 
     @FXML
-    TextField parametersTextField;
+    Canvas gradientImageCanvas;
 
     @FXML
-    Button loadImageButton;
+    Canvas thresholdImageCanvas;
 
     @FXML
-    Button saveImageButton;
+    Canvas zongSuenImageCanvas;
+
+    @FXML
+    Button loadOriginalImageButton;
+
+    @FXML
+    TextField gradientTextField;
 
     @FXML
     Button gradientButton;
+
+    @FXML
+    TextField thresholdTextField;
 
     @FXML
     Button thresholdFilterButton;
@@ -53,53 +62,123 @@ public class ZongSuenController implements Initializable {
     @FXML
     Button zongSuenAlgoButton;
 
+    private Canvas[] canvases;
     private Image[] images;
-
-    private int selectedImageIndex;
+    private TextField[] textFields;
 
     public ZongSuenController() {
         this.images = new Image[4];
     }
 
-    private void showExceptionMessage(Exception e) {
+    private static void showExceptionMessage(Exception e) {
         showMessage(e.getLocalizedMessage(), Alert.AlertType.ERROR);
     }
 
-    private void showMessage(String message, Alert.AlertType type) {
+    private static void showMessage(String message, Alert.AlertType type) {
         Alert alert = new Alert(type, message, ButtonType.OK);
         alert.show();
     }
 
+    private static Image loadImage(Event event) {
+        File file = selectFile(event, LOAD);
+        if (file == null) return null;
+
+        try {
+            BufferedImage inputImage = ImageIO.read(file);
+            return SwingFXUtils.toFXImage(inputImage, null);
+        } catch (IOException e) {
+            showMessage(
+                    "Невозможно загрузить картинку: " + e.getLocalizedMessage(),
+                    Alert.AlertType.WARNING);
+
+            return null;
+        }
+    }
+
+    private static void saveImage(Event event, Image image) {
+        if (image == null) return;
+
+        File file = selectFile(event, SAVE);
+        if (file == null) return;
+
+        BufferedImage outputImage = SwingFXUtils.fromFXImage(image, null);
+
+        try {
+            ImageIO.write(outputImage, "png", file);
+        } catch (IOException e) {
+            showMessage(
+                    "Невозможно сохранить картинку: " + e.getLocalizedMessage(),
+                    Alert.AlertType.WARNING);
+        }
+    }
+
+    private static void clearCanvas(Canvas canvas) {
+        GraphicsContext graphics = canvas.getGraphicsContext2D();
+        graphics.setFill(Color.WHITE);
+        graphics.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+
+    private static void drawImage(Canvas canvas, Image image) {
+        GraphicsContext context = canvas.getGraphicsContext2D();
+        context.drawImage(image, 0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+
+    private static String[] extractParameters(TextField textField) {
+        String[] parameters = new String[0];
+
+        if (textField != null) {
+            String parameterString = textField.getText();
+            if (parameterString != null) {
+                parameters = parameterString.trim().split(" ");
+            }
+        }
+
+        return parameters;
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        initCanvas();
-        initTextField();
+        initCanvases();
+        initTextFields();
         initButtons();
     }
 
-    private void clearCanvas() {
-        GraphicsContext graphics = imageCanvas.getGraphicsContext2D();
-        graphics.setFill(Color.WHITE);
-        graphics.fillRect(0, 0, imageCanvas.getWidth(), imageCanvas.getHeight());
+    private void initCanvases() {
+        this.canvases = new Canvas[]{
+                originalImageCanvas, gradientImageCanvas,
+                thresholdImageCanvas, zongSuenImageCanvas
+        };
+
+        for (int canvasIndex = 0; canvasIndex < canvases.length; ++canvasIndex) {
+            Canvas canvas = canvases[canvasIndex];
+
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int sizeCoeff = ZongSuenApplication.SIZE_COEFF;
+
+            canvas.setWidth(screenSize.width * sizeCoeff / (sizeCoeff + 1) - 100);
+            canvas.setHeight(screenSize.height * sizeCoeff / (sizeCoeff + 1)  - 100);
+
+            canvas.setWidth(canvas.getWidth() / 2);
+            canvas.setHeight(canvas.getHeight() / 2);
+
+            clearCanvas(canvas);
+
+            int finalCanvasIndex = canvasIndex;
+            canvas.setOnMouseClicked(event -> {
+                Image canvasImage = images[finalCanvasIndex];
+                saveImage(event, canvasImage);
+            });
+        }
     }
 
-    private void initCanvas() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int sizeCoeff = ZongSuenApplication.SIZE_COEFF;
-
-        imageCanvas.setWidth(screenSize.width * sizeCoeff / (sizeCoeff + 1) - 100);
-        imageCanvas.setHeight(screenSize.height * sizeCoeff / (sizeCoeff + 1)  - 100);
-
-        clearCanvas();
-    }
-
-    private void initTextField() {
-
+    private void initTextFields() {
+        this.textFields = new TextField[] {
+                null, gradientTextField, thresholdTextField, null
+        };
     }
 
     private void initButtons() {
-        initLoadImageButton();
-        initSaveImageButton();
+        initLoadOriginalImageButton();
 
         setImageProcessor(gradientButton, new GradientProcessor(), 0, 1);
         setImageProcessor(thresholdFilterButton, new ThresholdFilterProcessor(), 1, 2);
@@ -108,7 +187,7 @@ public class ZongSuenController implements Initializable {
 
     private static final int LOAD = 0, SAVE = 1;
 
-    private File selectFile(ActionEvent event, int type) {
+    private static File selectFile(Event event, int type) {
         FileChooser fileChooser = new FileChooser();
 
 //            FileChooser.ExtensionFilter bmpFilter = new FileChooser.ExtensionFilter(
@@ -132,59 +211,19 @@ public class ZongSuenController implements Initializable {
     /**
      * http://java-buddy.blogspot.ru/2013/01/use-javafx-filechooser-to-open-image.html
      */
-    private void initLoadImageButton() {
-        loadImageButton.setOnAction(event -> {
-            File file = selectFile(event, LOAD);
-            if (file == null) return;
+    private void initLoadOriginalImageButton() {
+        loadOriginalImageButton.setOnAction(event -> {
+            Image image = loadImage(event);
 
-            try {
-                BufferedImage inputImage = ImageIO.read(file);
-                Image image = SwingFXUtils.toFXImage(inputImage, null);
+            Arrays.fill(images, null);
+            images[0] = image;
 
-                Arrays.fill(images, null);
-                images[0] = image;
-
-                showImage(0);
-            } catch (IOException e) {
-                showMessage(
-                        "Невозможно загрузить картинку: " + e.getLocalizedMessage(),
-                        Alert.AlertType.WARNING);
-            }
+            showImage(0);
         });
     }
 
     private void showImage(int imageIndex) {
-        selectedImageIndex = imageIndex;
-
-        GraphicsContext context = imageCanvas.getGraphicsContext2D();
-        context.drawImage(images[imageIndex], 0, 0, imageCanvas.getWidth(), imageCanvas.getHeight());
-    }
-
-    private void initSaveImageButton() {
-        saveImageButton.setOnAction(event -> {
-            Image savedImage = images[selectedImageIndex];
-            if (savedImage == null) return;
-
-            File file = selectFile(event, SAVE);
-            if (file == null) return;
-
-            BufferedImage outputImage = SwingFXUtils.fromFXImage(savedImage, null);
-
-            try {
-                ImageIO.write(outputImage, "png", file);
-            } catch (IOException e) {
-                showMessage(
-                        "Невозможно сохранить картинку: " + e.getLocalizedMessage(),
-                        Alert.AlertType.WARNING);
-            }
-        });
-    }
-
-    private String[] extractParameters() {
-        String parameterString = parametersTextField.getText();
-        if (parameterString == null) return new String[0];
-
-        return parameterString.trim().split(" ");
+        drawImage(canvases[imageIndex], images[imageIndex]);
     }
 
     private void setImageProcessor(Button button, ImageProcessor processor, int sourceIndex, int targetIndex) {
@@ -195,7 +234,7 @@ public class ZongSuenController implements Initializable {
                     throw new AnastasiaException("Отсутствует изображение для обработки");
                 }
 
-                String[] parameters = extractParameters();
+                String[] parameters = extractParameters(textFields[targetIndex]);
 
                 images[targetIndex] = processor.process(sourceImage, parameters);
 
