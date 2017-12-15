@@ -1,0 +1,25 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.GridPane?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+<GridPane fx:controller="com.anastasia.app.zong_suen.view.ZongSuenController"
+          xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">
+
+    <Canvas fx:id="imageCanvas" GridPane.rowIndex="0"/>
+
+    <HBox GridPane.rowIndex="1" spacing="20" alignment="CENTER_RIGHT">
+
+        <TextField fx:id="parametersTextField"/>
+        <Button fx:id="loadImageButton" text="Загрузить"/>
+        <Button fx:id="saveImageButton" text="Сохранить"/>
+        <Button fx:id="gradientButton" text="Градиентный метод"/>
+        <Button fx:id="thresholdFilterButton" text="Пороговая фильтрация"/>
+        <Button fx:id="zongSuenAlgoButton" text="Зонга-Сунь"/>
+
+    </HBox>
+
+</GridPane>
