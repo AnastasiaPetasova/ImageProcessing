@@ -11,16 +11,14 @@ public class ThresholdFilterProcessor extends ImageProcessorImpl {
 
     @Override
     protected void initParameters(String... parameters) throws AnastasiaException {
-        if (parameters.length == 0) {
-            throw new AnastasiaException("Введите порог для преобразования в черно-белое изображение");
-        }
+        threshold = 0.5;
 
-        threshold = Double.NaN;
+        if (parameters.length > 0) {
+            try {
+                threshold = Double.parseDouble(parameters[0]);
+            } catch (NumberFormatException ignored) {
 
-        try {
-            threshold = Double.parseDouble(parameters[0]);
-        } catch (NumberFormatException e) {
-            throw new AnastasiaException("Порог преобразования должен быть числом от 0 до 1");
+            }
         }
     }
 
