@@ -85,9 +85,10 @@ public class ZongSuenController implements Initializable {
 
     private void initCanvas() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int sizeCoeff = ZongSuenApplication.SIZE_COEFF;
 
-        imageCanvas.setWidth(screenSize.width / 2 - 100);
-        imageCanvas.setHeight(screenSize.height / 2  - 100);
+        imageCanvas.setWidth(screenSize.width * sizeCoeff / (sizeCoeff + 1) - 100);
+        imageCanvas.setHeight(screenSize.height * sizeCoeff / (sizeCoeff + 1)  - 100);
 
         clearCanvas();
     }
